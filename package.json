@@ -1,0 +1,32 @@
+{
+    "name": "contract-automation-system",
+    "version": "1.0.0",
+    "description": "Система автоматизації документообігу договорів з мінімізацією ручної праці",
+    "main": "index.js",
+    "scripts": {
+        "start": "cd telegram-bot && npm start",
+        "dev": "cd telegram-bot && npm run dev",
+        "install-deps": "cd telegram-bot && npm install",
+        "test": "echo \"Запустіть тести згідно з setup-instructions.md\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "contract-automation-system"
+    },
+    "keywords": [
+        "contract",
+        "automation",
+        "google-workspace",
+        "telegram-bot",
+        "document-management",
+        "ukraine"
+    ],
+    "author": "Contract Automation Team",
+    "license": "MIT",
+    "dependencies": {
+        "node-telegram-bot-api": "^0.61.0"
+    },
+    "engines": {
+        "node": ">=14.0.0"
+    }
+}
