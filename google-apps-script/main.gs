@@ -158,22 +158,27 @@ function addToSpreadsheet(formData) {
   const performerData = getPerformerData(formData.performer);
   
   const rowData = [
-    formData.contractNumber,
-    formData.timestamp,
-    formData.client,
-    formData.activityType,
-    formData.director,
-    formData.edrpou,
-    formData.description,
-    formData.amount,
-    formData.performer,
-    performerData.fullName || '',
-    performerData.edrpou || '',
-    performerData.address || '',
-    CONFIG.CONTRACT_STATUS.DRAFT, // початковий статус
-    '', // посилання на папку (заповниться пізніше)
-    '', // посилання на договір (заповниться пізніше)
-    new Date() // дата створення
+    formData.contractNumber,        // A - Номер договору
+    formData.timestamp,             // B - Timestamp
+    formData.client,                // C - Клієнт
+    formData.activityType,          // D - Вид діяльності
+    formData.director,              // E - Директор/Керівник
+    formData.edrpou,                // F - ЄДРПОУ замовника
+    formData.description,           // G - Опис
+    formData.amount,                // H - Вартість
+    formData.performer,             // I - Виконавець (назва)
+    performerData.fullName || '',   // J - Повна назва виконавця
+    performerData.edrpou || '',     // K - ЄДРПОУ виконавця
+    performerData.address || '',    // L - Адреса виконавця
+    performerData.type || '',       // M - Тип організації виконавця
+    performerData.phone || '',      // N - Телефон виконавця
+    performerData.email || '',      // O - Email виконавця
+    performerData.bankDetails || '', // P - Банківські реквізити
+    performerData.director || '',   // Q - Керівник виконавця
+    CONFIG.CONTRACT_STATUS.DRAFT,   // R - Статус
+    '',                             // S - Посилання на папку
+    '',                             // T - Посилання на договір
+    new Date()                      // U - Дата створення
   ];
   
   sheet.appendRow(rowData);
@@ -184,22 +189,23 @@ function addToSpreadsheet(formData) {
  */
 function getPerformerData(performerName) {
   try {
-    const sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.SHEETS.PERFORMERS);
-    const data = sheet.getDataRange().getValues();
+    // Використовуємо нову функцію з performers-management.gs
+    const performer = getPerformerByName(performerName);
     
-    // Шукаємо виконавця за назвою
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === performerName) {
-        return {
-          fullName: data[i][1],
-          edrpou: data[i][2],
-          address: data[i][3],
-          type: data[i][4] // ФОП, ГО, ТОВ
-        };
-      }
+    if (performer) {
+      return {
+        fullName: performer.fullName,
+        edrpou: performer.edrpou,
+        address: performer.address,
+        type: performer.type,
+        phone: performer.phone,
+        email: performer.email,
+        bankDetails: performer.bankDetails,
+        director: performer.director
+      };
     }
   } catch (error) {
-    Logger.log('Лист Виконавці не знайдено або порожній');
+    Logger.log('❌ Помилка отримання даних виконавця:', error.toString());
   }
   
   return {}; // Якщо не знайдено
@@ -286,6 +292,13 @@ function generateContract(formData, folderUrl) {
     Logger.log('✅ Body документа отримано');
   
     Logger.log('Крок 5: Підготовка заміни тексту...');
+    // Отримуємо повні дані виконавця
+    const performerData = getPerformerData(formData.performer);
+    
+    // Конвертуємо суму в слова
+    const amountNumber = parseFloat(formData.amount) || 0;
+    const amountWords = amountToWords(amountNumber);
+    
     // Замінюємо плейсхолдери на реальні дані
     const replacements = {
       '{{CONTRACT_NUMBER}}': formData.contractNumber,
@@ -295,8 +308,18 @@ function generateContract(formData, folderUrl) {
       '{{CLIENT_EDRPOU}}': formData.edrpou,
       '{{DESCRIPTION}}': formData.description,
       '{{AMOUNT}}': formData.amount,
+      '{{AMOUNT_WORDS}}': amountWords,
       '{{PERFORMER}}': formData.performer,
-      '{{DATE}}': Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd.MM.yyyy')
+      '{{PERFORMER_FULL_NAME}}': performerData.fullName || formData.performer,
+      '{{PERFORMER_EDRPOU}}': performerData.edrpou || '',
+      '{{PERFORMER_ADDRESS}}': performerData.address || '',
+      '{{PERFORMER_TYPE}}': performerData.type || '',
+      '{{PERFORMER_PHONE}}': performerData.phone || '',
+      '{{PERFORMER_EMAIL}}': performerData.email || '',
+      '{{PERFORMER_BANK_DETAILS}}': performerData.bankDetails || '',
+      '{{PERFORMER_DIRECTOR}}': performerData.director || '',
+      '{{DATE}}': Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd.MM.yyyy'),
+      '{{YEAR}}': new Date().getFullYear().toString()
     };
     
     Logger.log('Replacements:', JSON.stringify(replacements));
@@ -337,9 +360,9 @@ function updateSpreadsheetWithLinks(contractNumber, folderUrl, contractUrl) {
   // Знаходимо рядок з нашим договором
   for (let i = 1; i < data.length; i++) {
     if (data[i][0] === contractNumber) {
-      sheet.getRange(i + 1, 14).setValue(folderUrl); // Колонка з посиланням на папку
-      sheet.getRange(i + 1, 15).setValue(contractUrl); // Колонка з посиланням на договір
-      sheet.getRange(i + 1, 13).setValue(CONFIG.CONTRACT_STATUS.ACTIVE); // Оновлюємо статус
+      sheet.getRange(i + 1, 19).setValue(folderUrl); // Колонка S - Посилання на папку
+      sheet.getRange(i + 1, 20).setValue(contractUrl); // Колонка T - Посилання на договір
+      sheet.getRange(i + 1, 18).setValue(CONFIG.CONTRACT_STATUS.ACTIVE); // Колонка R - Статус
       break;
     }
   }
@@ -538,3 +561,227 @@ function testTemplateAccess() {
 }
 
 // Видалено тестові функції для чистоти коду
+
+/**
+ * Конвертація числа в слова (сума прописом)
+ */
+function numberToWords(number) {
+  const units = ['', 'один', 'два', 'три', 'чотири', 'п\'ять', 'шість', 'сім', 'вісім', 'дев\'ять'];
+  const teens = ['десять', 'одинадцять', 'дванадцять', 'тринадцять', 'чотирнадцять', 'п\'ятнадцять', 'шістнадцять', 'сімнадцять', 'вісімнадцять', 'дев\'ятнадцять'];
+  const tens = ['', '', 'двадцять', 'тридцять', 'сорок', 'п\'ятдесят', 'шістдесят', 'сімдесят', 'вісімдесят', 'дев\'яносто'];
+  const hundreds = ['', 'сто', 'двісті', 'триста', 'чотириста', 'п\'ятсот', 'шістсот', 'сімсот', 'вісімсот', 'дев\'ятсот'];
+  
+  const thousands = ['', 'тисяча', 'тисячі', 'тисяч'];
+  const millions = ['', 'мільйон', 'мільйони', 'мільйонів'];
+  
+  function convertGroup(num, group) {
+    if (num === 0) return '';
+    
+    let result = '';
+    
+    // Сотні
+    if (num >= 100) {
+      result += hundreds[Math.floor(num / 100)] + ' ';
+      num %= 100;
+    }
+    
+    // Десятки та одиниці
+    if (num >= 20) {
+      result += tens[Math.floor(num / 10)] + ' ';
+      num %= 10;
+      if (num > 0) {
+        result += units[num] + ' ';
+      }
+    } else if (num >= 10) {
+      result += teens[num - 10] + ' ';
+    } else if (num > 0) {
+      result += units[num] + ' ';
+    }
+    
+    // Додаємо назву групи
+    if (group === 'thousands') {
+      if (num === 1) result += thousands[1] + ' ';
+      else if (num >= 2 && num <= 4) result += thousands[2] + ' ';
+      else result += thousands[3] + ' ';
+    } else if (group === 'millions') {
+      if (num === 1) result += millions[1] + ' ';
+      else if (num >= 2 && num <= 4) result += millions[2] + ' ';
+      else result += millions[3] + ' ';
+    }
+    
+    return result;
+  }
+  
+  // Розбиваємо число на частини
+  const millions = Math.floor(number / 1000000);
+  const thousands = Math.floor((number % 1000000) / 1000);
+  const remainder = number % 1000;
+  
+  let result = '';
+  
+  if (millions > 0) {
+    result += convertGroup(millions, 'millions');
+  }
+  
+  if (thousands > 0) {
+    result += convertGroup(thousands, 'thousands');
+  }
+  
+  if (remainder > 0) {
+    result += convertGroup(remainder, '');
+  }
+  
+  return result.trim();
+}
+
+/**
+ * Конвертація суми в гривні прописом
+ */
+function amountToWords(amount) {
+  if (amount === 0) return 'нуль гривень';
+  
+  const integerPart = Math.floor(amount);
+  const decimalPart = Math.round((amount - integerPart) * 100);
+  
+  let result = numberToWords(integerPart);
+  
+  // Додаємо "гривень/гривні/гривня"
+  const lastDigit = integerPart % 10;
+  const lastTwoDigits = integerPart % 100;
+  
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+    result += ' гривень';
+  } else if (lastDigit === 1) {
+    result += ' гривня';
+  } else if (lastDigit >= 2 && lastDigit <= 4) {
+    result += ' гривні';
+  } else {
+    result += ' гривень';
+  }
+  
+  // Додаємо копійки
+  if (decimalPart > 0) {
+    result += ' ' + numberToWords(decimalPart);
+    
+    const lastDigitKop = decimalPart % 10;
+    const lastTwoDigitsKop = decimalPart % 100;
+    
+    if (lastTwoDigitsKop >= 11 && lastTwoDigitsKop <= 19) {
+      result += ' копійок';
+    } else if (lastDigitKop === 1) {
+      result += ' копійка';
+    } else if (lastDigitKop >= 2 && lastDigitKop <= 4) {
+      result += ' копійки';
+    } else {
+      result += ' копійок';
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Ініціалізація заголовків таблиці договорів
+ */
+function initializeContractsSheet() {
+  Logger.log('=== ІНІЦІАЛІЗАЦІЯ ЗАГОЛОВКІВ ТАБЛИЦІ ДОГОВОРІВ ===');
+  
+  try {
+    const spreadsheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+    const contractsSheet = spreadsheet.getSheetByName(CONFIG.SHEETS.CONTRACTS);
+    
+    // Заголовки колонок
+    const headers = [
+      'Номер договору',
+      'Timestamp',
+      'Клієнт',
+      'Вид діяльності',
+      'Директор/Керівник',
+      'ЄДРПОУ замовника',
+      'Опис',
+      'Вартість',
+      'Виконавець',
+      'Повна назва виконавця',
+      'ЄДРПОУ виконавця',
+      'Адреса виконавця',
+      'Тип організації виконавця',
+      'Телефон виконавця',
+      'Email виконавця',
+      'Банківські реквізити',
+      'Керівник виконавця',
+      'Статус',
+      'Посилання на папку',
+      'Посилання на договір',
+      'Дата створення'
+    ];
+    
+    // Встановлюємо заголовки
+    contractsSheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    
+    // Форматування заголовків
+    const headerRange = contractsSheet.getRange(1, 1, 1, headers.length);
+    headerRange.setFontWeight('bold');
+    headerRange.setBackground('#34a853');
+    headerRange.setFontColor('white');
+    
+    // Встановлюємо ширину колонок
+    contractsSheet.setColumnWidth(1, 150);  // Номер договору
+    contractsSheet.setColumnWidth(2, 150);  // Timestamp
+    contractsSheet.setColumnWidth(3, 250);  // Клієнт
+    contractsSheet.setColumnWidth(4, 200);  // Вид діяльності
+    contractsSheet.setColumnWidth(5, 200);  // Директор/Керівник
+    contractsSheet.setColumnWidth(6, 120);  // ЄДРПОУ замовника
+    contractsSheet.setColumnWidth(7, 300);  // Опис
+    contractsSheet.setColumnWidth(8, 120);  // Вартість
+    contractsSheet.setColumnWidth(9, 200);  // Виконавець
+    contractsSheet.setColumnWidth(10, 300); // Повна назва виконавця
+    contractsSheet.setColumnWidth(11, 120); // ЄДРПОУ виконавця
+    contractsSheet.setColumnWidth(12, 400); // Адреса виконавця
+    contractsSheet.setColumnWidth(13, 150); // Тип організації виконавця
+    contractsSheet.setColumnWidth(14, 150); // Телефон виконавця
+    contractsSheet.setColumnWidth(15, 200); // Email виконавця
+    contractsSheet.setColumnWidth(16, 400); // Банківські реквізити
+    contractsSheet.setColumnWidth(17, 200); // Керівник виконавця
+    contractsSheet.setColumnWidth(18, 120); // Статус
+    contractsSheet.setColumnWidth(19, 300); // Посилання на папку
+    contractsSheet.setColumnWidth(20, 300); // Посилання на договір
+    contractsSheet.setColumnWidth(21, 120); // Дата створення
+    
+    Logger.log('✅ Заголовки таблиці договорів успішно ініціалізовані');
+    
+  } catch (error) {
+    Logger.log('❌ Помилка ініціалізації заголовків таблиці:', error.toString());
+    throw error;
+  }
+}
+
+/**
+ * Повна ініціалізація системи
+ */
+function initializeSystem() {
+  Logger.log('=== ПОВНА ІНІЦІАЛІЗАЦІЯ СИСТЕМИ ===');
+  
+  try {
+    // 1. Ініціалізуємо вкладку виконавців
+    Logger.log('Крок 1: Ініціалізація вкладки виконавців...');
+    initializePerformersSheet();
+    
+    // 2. Ініціалізуємо заголовки таблиці договорів
+    Logger.log('Крок 2: Ініціалізація заголовків таблиці договорів...');
+    initializeContractsSheet();
+    
+    // 3. Тестуємо доступ до шаблонів
+    Logger.log('Крок 3: Перевірка доступу до шаблонів...');
+    testTemplateAccess();
+    
+    Logger.log('✅ Система успішно ініціалізована!');
+    
+    // Відправляємо повідомлення про успішну ініціалізацію
+    sendQuickTelegramMessage('✅ Система автоматизації договорів успішно ініціалізована!\n\n📋 Вкладка "Виконавці" створена з базовими даними\n📊 Таблиця договорів оновлена з новими колонками\n📄 Доступ до шаблонів перевірено');
+    
+  } catch (error) {
+    Logger.log('❌ Помилка ініціалізації системи:', error.toString());
+    sendQuickTelegramMessage(`❌ Помилка ініціалізації системи:\n${error.toString()}`);
+    throw error;
+  }
+}
