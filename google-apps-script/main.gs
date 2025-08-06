@@ -99,9 +99,9 @@ function parseFormData(e) {
   Logger.log('Кількість значень:', values.length);
   Logger.log('Всі значення:', JSON.stringify(values));
   
-  // Безпечне отримання значень з перевіркою відповідно до нової структури
+  // Безпечне отримання значень з перевіркою відповідно до ПРАВИЛЬНОЇ структури
   const result = {
-    timestamp: values[CONFIG.FORM_FIELDS.TIMESTAMP] || new Date(),
+    contractNumber: values[CONFIG.FORM_FIELDS.CONTRACT_NUMBER] || '',
     clientName: values[CONFIG.FORM_FIELDS.CLIENT_NAME] || '',
     clientTaxType: values[CONFIG.FORM_FIELDS.CLIENT_TAX_TYPE] || '',
     clientDirector: values[CONFIG.FORM_FIELDS.CLIENT_DIRECTOR] || '',
@@ -116,7 +116,7 @@ function parseFormData(e) {
     amount: values[CONFIG.FORM_FIELDS.AMOUNT] || '',
     currency: values[CONFIG.FORM_FIELDS.CURRENCY] || 'грн',
     paymentTerm: values[CONFIG.FORM_FIELDS.PAYMENT_TERM] || '',
-    performer: values[CONFIG.FORM_FIELDS.PERFORMER] || ''
+    performer: values[CONFIG.FORM_FIELDS.PERFORMER_NAME] || ''
   };
   
   Logger.log('Результат парсингу:', JSON.stringify(result));
@@ -178,44 +178,42 @@ function updateLastRowWithContractData(formData) {
   const performerData = getPerformerData(formData.performer);
   Logger.log('Дані виконавця:', performerData);
   
-  // Оновлюємо тільки потрібні колонки в останньому рядку
+  // Оновлюємо тільки потрібні колонки в останньому рядку (ПРАВИЛЬНА СТРУКТУРА)
   try {
-    // Колонка A - Номер договору
-    sheet.getRange(lastRow, 1).setValue(formData.contractNumber);
+    // Колонка A - Номер договору (генерується тут)
+    sheet.getRange(lastRow, CONFIG.FORM_FIELDS.CONTRACT_NUMBER + 1).setValue(formData.contractNumber);
     
-    // Додаємо дані виконавця (якщо є колонки для них)
+    // Додаємо дані виконавця з довідника до колонок Q-W
     const totalColumns = sheet.getLastColumn();
     Logger.log('Загальна кількість колонок:', totalColumns);
     
-    if (totalColumns >= 10) {
-      sheet.getRange(lastRow, 10).setValue(performerData.fullName || ''); // J - Повна назва виконавця
+    // Q - ЄДРПОУ виконавця
+    if (totalColumns >= CONFIG.FORM_FIELDS.PERFORMER_EDRPOU + 1) {
+      sheet.getRange(lastRow, CONFIG.FORM_FIELDS.PERFORMER_EDRPOU + 1).setValue(performerData.edrpou || '');
     }
-    if (totalColumns >= 11) {
-      sheet.getRange(lastRow, 11).setValue(performerData.edrpou || '');    // K - ЄДРПОУ виконавця
+    // R - Адреса виконавця
+    if (totalColumns >= CONFIG.FORM_FIELDS.PERFORMER_ADDRESS + 1) {
+      sheet.getRange(lastRow, CONFIG.FORM_FIELDS.PERFORMER_ADDRESS + 1).setValue(performerData.address || '');
     }
-    if (totalColumns >= 12) {
-      sheet.getRange(lastRow, 12).setValue(performerData.address || '');  // L - Адреса виконавця
+    // S - Тип організації виконавця
+    if (totalColumns >= CONFIG.FORM_FIELDS.PERFORMER_TYPE + 1) {
+      sheet.getRange(lastRow, CONFIG.FORM_FIELDS.PERFORMER_TYPE + 1).setValue(performerData.type || '');
     }
-    if (totalColumns >= 13) {
-      sheet.getRange(lastRow, 13).setValue(performerData.type || '');     // M - Тип організації
+    // T - Телефон виконавця
+    if (totalColumns >= CONFIG.FORM_FIELDS.PERFORMER_PHONE + 1) {
+      sheet.getRange(lastRow, CONFIG.FORM_FIELDS.PERFORMER_PHONE + 1).setValue(performerData.phone || '');
     }
-    if (totalColumns >= 14) {
-      sheet.getRange(lastRow, 14).setValue(performerData.phone || '');    // N - Телефон
+    // U - Банківські виконавця
+    if (totalColumns >= CONFIG.FORM_FIELDS.PERFORMER_BANK + 1) {
+      sheet.getRange(lastRow, CONFIG.FORM_FIELDS.PERFORMER_BANK + 1).setValue(performerData.bankDetails || '');
     }
-    if (totalColumns >= 15) {
-      sheet.getRange(lastRow, 15).setValue(performerData.email || '');    // O - Email
+    // V - Керівник виконавця
+    if (totalColumns >= CONFIG.FORM_FIELDS.PERFORMER_DIRECTOR + 1) {
+      sheet.getRange(lastRow, CONFIG.FORM_FIELDS.PERFORMER_DIRECTOR + 1).setValue(performerData.director || '');
     }
-    if (totalColumns >= 16) {
-      sheet.getRange(lastRow, 16).setValue(performerData.bankDetails || ''); // P - Банківські реквізити
-    }
-    if (totalColumns >= 17) {
-      sheet.getRange(lastRow, 17).setValue(performerData.director || ''); // Q - Керівник виконавця
-    }
-    if (totalColumns >= 18) {
-      sheet.getRange(lastRow, 18).setValue(CONFIG.CONTRACT_STATUS.DRAFT); // R - Статус
-    }
-    if (totalColumns >= 21) {
-      sheet.getRange(lastRow, 21).setValue(new Date()); // U - Дата створення
+    // W - Дата додавання
+    if (totalColumns >= CONFIG.FORM_FIELDS.DATE_ADDED + 1) {
+      sheet.getRange(lastRow, CONFIG.FORM_FIELDS.DATE_ADDED + 1).setValue(new Date());
     }
     
     Logger.log('✅ Останню строку успішно оновлено');
@@ -814,29 +812,31 @@ function initializeContractsSheet() {
       throw new Error('Вкладка договорів не знайдена');
     }
     
-    // Заголовки колонок
+    // Заголовки колонок (ПРАВИЛЬНА СТРУКТУРА A-W)
     const headers = [
-      'Номер договору',
-      'Timestamp',
-      'Клієнт',
-      'Вид діяльності',
-      'Директор/Керівник',
-      'ЄДРПОУ замовника',
-      'Опис',
-      'Вартість',
-      'Виконавець',
-      'Повна назва виконавця',
-      'ЄДРПОУ виконавця',
-      'Адреса виконавця',
-      'Тип організації виконавця',
-      'Телефон виконавця',
-      'Email виконавця',
-      'Банківські реквізити',
-      'Керівник виконавця',
-      'Статус',
-      'Посилання на папку',
-      'Посилання на договір',
-      'Дата створення'
+      'Номер договору',                    // A - Генерується
+      'Назва компанії замовника',          // B - З форми
+      'Тип оподаткування замовника',       // C - З форми
+      'ПІБ директора/представника',        // D - З форми (необов\'язкове)
+      'Адреса замовника',                  // E - З форми
+      'ЄДРПОУ замовника',                  // F - З форми
+      'Банківський рахунок замовника',     // G - З форми
+      'Назва банку замовника',             // H - З форми
+      'МФО банку замовника',               // I - З форми
+      'Опис послуг',                       // J - З форми
+      'Початок періоду розміщення',        // K - З форми
+      'Кінець періоду розміщення',         // L - З форми
+      'Загальна сума',                     // M - З форми
+      'Валюта',                            // N - З форми
+      'Термін оплати',                     // O - З форми
+      'Назва виконавця',                   // P - З форми (вибір зі списку)
+      'ЄДРПОУ виконавця',                  // Q - З довідника виконавців
+      'Адреса виконавця',                  // R - З довідника виконавців
+      'Тип організації виконавця',         // S - З довідника виконавців
+      'Телефон виконавця',                 // T - З довідника виконавців
+      'Банківські виконавця',              // U - З довідника виконавців
+      'Керівник виконавця',                // V - З довідника виконавців
+      'Дата додавання'                     // W - Генерується
     ];
     
     // Встановлюємо заголовки
