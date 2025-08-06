@@ -571,8 +571,8 @@ function numberToWords(number) {
   const tens = ['', '', 'двадцять', 'тридцять', 'сорок', 'п\'ятдесят', 'шістдесят', 'сімдесят', 'вісімдесят', 'дев\'яносто'];
   const hundreds = ['', 'сто', 'двісті', 'триста', 'чотириста', 'п\'ятсот', 'шістсот', 'сімсот', 'вісімсот', 'дев\'ятсот'];
   
-  const thousands = ['', 'тисяча', 'тисячі', 'тисяч'];
-  const millions = ['', 'мільйон', 'мільйони', 'мільйонів'];
+  const thousandsNames = ['', 'тисяча', 'тисячі', 'тисяч'];
+  const millionsNames = ['', 'мільйон', 'мільйони', 'мільйонів'];
   
   function convertGroup(num, group) {
     if (num === 0) return '';
@@ -600,31 +600,31 @@ function numberToWords(number) {
     
     // Додаємо назву групи
     if (group === 'thousands') {
-      if (num === 1) result += thousands[1] + ' ';
-      else if (num >= 2 && num <= 4) result += thousands[2] + ' ';
-      else result += thousands[3] + ' ';
+      if (num === 1) result += thousandsNames[1] + ' ';
+      else if (num >= 2 && num <= 4) result += thousandsNames[2] + ' ';
+      else result += thousandsNames[3] + ' ';
     } else if (group === 'millions') {
-      if (num === 1) result += millions[1] + ' ';
-      else if (num >= 2 && num <= 4) result += millions[2] + ' ';
-      else result += millions[3] + ' ';
+      if (num === 1) result += millionsNames[1] + ' ';
+      else if (num >= 2 && num <= 4) result += millionsNames[2] + ' ';
+      else result += millionsNames[3] + ' ';
     }
     
     return result;
   }
   
   // Розбиваємо число на частини
-  const millions = Math.floor(number / 1000000);
-  const thousands = Math.floor((number % 1000000) / 1000);
+  const millionsPart = Math.floor(number / 1000000);
+  const thousandsPart = Math.floor((number % 1000000) / 1000);
   const remainder = number % 1000;
   
   let result = '';
   
-  if (millions > 0) {
-    result += convertGroup(millions, 'millions');
+  if (millionsPart > 0) {
+    result += convertGroup(millionsPart, 'millions');
   }
   
-  if (thousands > 0) {
-    result += convertGroup(thousands, 'thousands');
+  if (thousandsPart > 0) {
+    result += convertGroup(thousandsPart, 'thousands');
   }
   
   if (remainder > 0) {
