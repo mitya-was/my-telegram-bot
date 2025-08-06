@@ -40,10 +40,10 @@ function onFormSubmit(e) {
     formData.contractNumber = contractNumber;
     Logger.log('Номер договору:', contractNumber);
     
-    // Додаємо дані до таблиці
-    Logger.log('Додавання до таблиці...');
-    addToSpreadsheet(formData);
-    Logger.log('Дані додано до таблиці');
+    // ОНОВЛЮЄМО ОСТАННЮ СТРОКУ замість додавання нової
+    Logger.log('Оновлення останньої строки з номером договору...');
+    updateLastRowWithContractData(formData);
+    Logger.log('Дані оновлено в таблиці');
     
     // Створюємо структуру папок
     Logger.log('Створення папки...');
@@ -149,7 +149,76 @@ function generateContractNumber() {
 }
 
 /**
- * Додавання даних до Google Sheets
+ * Оновлення останньої строки з даними договору (замість додавання нової)
+ */
+function updateLastRowWithContractData(formData) {
+  Logger.log('=== ОНОВЛЕННЯ ОСТАННЬОЇ СТРОКИ ===');
+  
+  const sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.SHEETS.CONTRACTS);
+  const lastRow = sheet.getLastRow();
+  
+  Logger.log('Останній рядок:', lastRow);
+  
+  if (lastRow <= 1) {
+    Logger.log('❌ Немає даних для оновлення, додаємо нову строку');
+    addToSpreadsheet(formData);
+    return;
+  }
+  
+  // Отримуємо дані виконавця з довідника
+  const performerData = getPerformerData(formData.performer);
+  Logger.log('Дані виконавця:', performerData);
+  
+  // Оновлюємо тільки потрібні колонки в останньому рядку
+  try {
+    // Колонка A - Номер договору
+    sheet.getRange(lastRow, 1).setValue(formData.contractNumber);
+    
+    // Додаємо дані виконавця (якщо є колонки для них)
+    const totalColumns = sheet.getLastColumn();
+    Logger.log('Загальна кількість колонок:', totalColumns);
+    
+    if (totalColumns >= 10) {
+      sheet.getRange(lastRow, 10).setValue(performerData.fullName || ''); // J - Повна назва виконавця
+    }
+    if (totalColumns >= 11) {
+      sheet.getRange(lastRow, 11).setValue(performerData.edrpou || '');    // K - ЄДРПОУ виконавця
+    }
+    if (totalColumns >= 12) {
+      sheet.getRange(lastRow, 12).setValue(performerData.address || '');  // L - Адреса виконавця
+    }
+    if (totalColumns >= 13) {
+      sheet.getRange(lastRow, 13).setValue(performerData.type || '');     // M - Тип організації
+    }
+    if (totalColumns >= 14) {
+      sheet.getRange(lastRow, 14).setValue(performerData.phone || '');    // N - Телефон
+    }
+    if (totalColumns >= 15) {
+      sheet.getRange(lastRow, 15).setValue(performerData.email || '');    // O - Email
+    }
+    if (totalColumns >= 16) {
+      sheet.getRange(lastRow, 16).setValue(performerData.bankDetails || ''); // P - Банківські реквізити
+    }
+    if (totalColumns >= 17) {
+      sheet.getRange(lastRow, 17).setValue(performerData.director || ''); // Q - Керівник виконавця
+    }
+    if (totalColumns >= 18) {
+      sheet.getRange(lastRow, 18).setValue(CONFIG.CONTRACT_STATUS.DRAFT); // R - Статус
+    }
+    if (totalColumns >= 21) {
+      sheet.getRange(lastRow, 21).setValue(new Date()); // U - Дата створення
+    }
+    
+    Logger.log('✅ Останню строку успішно оновлено');
+    
+  } catch (error) {
+    Logger.log('❌ Помилка оновлення строки:', error.toString());
+    throw error;
+  }
+}
+
+/**
+ * Додавання даних до Google Sheets (резервна функція)
  */
 function addToSpreadsheet(formData) {
   const sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.SHEETS.CONTRACTS);
@@ -354,16 +423,57 @@ function generateContract(formData, folderUrl) {
  * Оновлення таблиці з посиланнями
  */
 function updateSpreadsheetWithLinks(contractNumber, folderUrl, contractUrl) {
-  const sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.SHEETS.CONTRACTS);
-  const data = sheet.getDataRange().getValues();
+  Logger.log('=== ОНОВЛЕННЯ ПОСИЛАНЬ ===');
+  Logger.log('Номер договору:', contractNumber);
   
-  // Знаходимо рядок з нашим договором
-  for (let i = 1; i < data.length; i++) {
-    if (data[i][0] === contractNumber) {
-      sheet.getRange(i + 1, 19).setValue(folderUrl); // Колонка S - Посилання на папку
-      sheet.getRange(i + 1, 20).setValue(contractUrl); // Колонка T - Посилання на договір
-      sheet.getRange(i + 1, 18).setValue(CONFIG.CONTRACT_STATUS.ACTIVE); // Колонка R - Статус
-      break;
+  const sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.SHEETS.CONTRACTS);
+  const lastRow = sheet.getLastRow();
+  const totalColumns = sheet.getLastColumn();
+  
+  Logger.log('Останній рядок:', lastRow);
+  Logger.log('Загальна кількість колонок:', totalColumns);
+  
+  // Оновлюємо останній рядок (який щойно був оновлений з номером договору)
+  try {
+    if (totalColumns >= 19) {
+      sheet.getRange(lastRow, 19).setValue(folderUrl); // Колонка S - Посилання на папку
+      Logger.log('✅ Посилання на папку додано');
+    }
+    if (totalColumns >= 20) {
+      sheet.getRange(lastRow, 20).setValue(contractUrl); // Колонка T - Посилання на договір
+      Logger.log('✅ Посилання на договір додано');
+    }
+    if (totalColumns >= 18) {
+      sheet.getRange(lastRow, 18).setValue(CONFIG.CONTRACT_STATUS.ACTIVE); // Колонка R - Статус
+      Logger.log('✅ Статус оновлено на АКТИВНИЙ');
+    }
+    
+    Logger.log('✅ Всі посилання успішно оновлено');
+    
+  } catch (error) {
+    Logger.log('❌ Помилка оновлення посилань:', error.toString());
+    
+    // Резервний метод - шукаємо по номеру договору
+    Logger.log('Пробуємо резервний метод пошуку...');
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === contractNumber) {
+        Logger.log(`Знайдено договір в рядку ${i + 1}`);
+        
+        if (totalColumns >= 19) {
+          sheet.getRange(i + 1, 19).setValue(folderUrl);
+        }
+        if (totalColumns >= 20) {
+          sheet.getRange(i + 1, 20).setValue(contractUrl);
+        }
+        if (totalColumns >= 18) {
+          sheet.getRange(i + 1, 18).setValue(CONFIG.CONTRACT_STATUS.ACTIVE);
+        }
+        
+        Logger.log('✅ Посилання оновлено резервним методом');
+        break;
+      }
     }
   }
 }
