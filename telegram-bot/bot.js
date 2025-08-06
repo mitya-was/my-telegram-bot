@@ -3,18 +3,24 @@
  * Contract Management Telegram Bot
  */
 
+// Завантаження змінних середовища
+require('dotenv').config();
+
 const TelegramBot = require('node-telegram-bot-api');
-// Конфігурація - використовуйте .env файл або змініть значення тут
+
+// Конфігурація з змінних середовища
 const CONFIG = {
     TELEGRAM: {
-        BOT_TOKEN: '8391553382:AAGhnyEswcHCVvwxwpBzeQIH58vALOpT1HA',
-        CHAT_ID: '156212174', // Ваш Chat ID
+        BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '8391553382:AAGhnyEswcHCVvwxwpBzeQIH58vALOpT1HA',
+        CHAT_ID: process.env.TELEGRAM_CHAT_ID || '156212174',
     },
-    FORM_ID: '1Jy7STz5k4y2tUJ-BG0OIGlP72BWNaeY8HHx8kHc31Qs',
-    FORM_URL: 'https://docs.google.com/forms/d/1Jy7STz5k4y2tUJ-BG0OIGlP72BWNaeY8HHx8kHc31Qs/viewform',
-    DRIVE_FOLDER_ID: '1uVNZTdCgZAu5q-oc7lAzKvn-FRfkJBx9',
-    SPREADSHEET_ID: '1IG8tGF8g8sulW5snTKt_yUXmscUNUkVOQR9_6UO3vlk',
-    GOOGLE_SCRIPT_URL: process.env.GOOGLE_SCRIPT_URL || '' // Потрібно буде додати після розгортання Apps Script
+    FORM_ID: process.env.GOOGLE_FORM_ID || '1Jy7STz5k4y2tUJ-BG0OIGlP72BWNaeY8HHx8kHc31Qs',
+    FORM_URL: process.env.GOOGLE_FORM_URL || 'https://docs.google.com/forms/d/1Jy7STz5k4y2tUJ-BG0OIGlP72BWNaeY8HHx8kHc31Qs/viewform',
+    DRIVE_FOLDER_ID: process.env.GOOGLE_DRIVE_FOLDER_ID || '1uVNZTdCgZAu5q-oc7lAzKvn-FRfkJBx9',
+    SPREADSHEET_ID: process.env.GOOGLE_SPREADSHEET_ID || '1IG8tGF8g8sulW5snTKt_yUXmscUNUkVOQR9_6UO3vlk',
+    GOOGLE_SCRIPT_URL: process.env.GOOGLE_SCRIPT_URL || '',
+    NODE_ENV: process.env.NODE_ENV || 'development',
+    LOG_LEVEL: process.env.LOG_LEVEL || 'info'
 };
 
 // Створюємо екземпляр бота з покращеними налаштуваннями
