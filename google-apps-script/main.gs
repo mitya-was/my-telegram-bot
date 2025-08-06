@@ -25,12 +25,13 @@ function onFormSubmit(e) {
     const formData = parseFormData(e);
     Logger.log('Дані форми після парсингу:', JSON.stringify(formData));
     
-    // Перевіряємо обов'язкові поля
-    if (!formData.client || !formData.amount) {
+    // Перевіряємо обов'язкові поля (ОНОВЛЕНІ)
+    if (!formData.clientName || !formData.amount || !formData.performer) {
       Logger.log('❌ ПОМИЛКА: Не заповнені обов\'язкові поля');
-      Logger.log('Клієнт:', formData.client);
+      Logger.log('Назва компанії:', formData.clientName);
       Logger.log('Сума:', formData.amount);
-      sendQuickTelegramMessage(`❌ Помилка: Не заповнені поля. Клієнт: ${formData.client}, Сума: ${formData.amount}`);
+      Logger.log('Виконавець:', formData.performer);
+      sendQuickTelegramMessage(`❌ Помилка: Не заповнені поля.\nКомпанія: ${formData.clientName}\nСума: ${formData.amount}\nВиконавець: ${formData.performer}`);
       return;
     }
     
@@ -84,10 +85,10 @@ ${error.toString()}
 }
 
 /**
- * Парсинг даних з форми
+ * Парсинг даних з форми (ОНОВЛЕНА СТРУКТУРА)
  */
 function parseFormData(e) {
-  Logger.log('=== ПАРСИНГ ДАНИХ ФОРМИ ===');
+  Logger.log('=== ПАРСИНГ ДАНИХ ФОРМИ (НОВА СТРУКТУРА) ===');
   
   if (!e || !e.values) {
     Logger.log('❌ Немає e.values');
@@ -98,16 +99,24 @@ function parseFormData(e) {
   Logger.log('Кількість значень:', values.length);
   Logger.log('Всі значення:', JSON.stringify(values));
   
-  // Безпечне отримання значень з перевіркою
+  // Безпечне отримання значень з перевіркою відповідно до нової структури
   const result = {
-    timestamp: values[0] || new Date(),
-    client: values[1] || '',
-    activityType: values[2] || '',
-    director: values[3] || '',
-    edrpou: values[4] || '',
-    description: values[5] || '',
-    amount: values[6] || '',
-    performer: values[7] || ''
+    timestamp: values[CONFIG.FORM_FIELDS.TIMESTAMP] || new Date(),
+    clientName: values[CONFIG.FORM_FIELDS.CLIENT_NAME] || '',
+    clientTaxType: values[CONFIG.FORM_FIELDS.CLIENT_TAX_TYPE] || '',
+    clientDirector: values[CONFIG.FORM_FIELDS.CLIENT_DIRECTOR] || '',
+    clientAddress: values[CONFIG.FORM_FIELDS.CLIENT_ADDRESS] || '',
+    clientEdrpou: values[CONFIG.FORM_FIELDS.CLIENT_EDRPOU] || '',
+    clientBankAccount: values[CONFIG.FORM_FIELDS.CLIENT_BANK_ACCOUNT] || '',
+    clientBankName: values[CONFIG.FORM_FIELDS.CLIENT_BANK_NAME] || '',
+    clientBankMfo: values[CONFIG.FORM_FIELDS.CLIENT_BANK_MFO] || '',
+    description: values[CONFIG.FORM_FIELDS.DESCRIPTION] || '',
+    periodStart: values[CONFIG.FORM_FIELDS.PERIOD_START] || '',
+    periodEnd: values[CONFIG.FORM_FIELDS.PERIOD_END] || '',
+    amount: values[CONFIG.FORM_FIELDS.AMOUNT] || '',
+    currency: values[CONFIG.FORM_FIELDS.CURRENCY] || 'грн',
+    paymentTerm: values[CONFIG.FORM_FIELDS.PAYMENT_TERM] || '',
+    performer: values[CONFIG.FORM_FIELDS.PERFORMER] || ''
   };
   
   Logger.log('Результат парсингу:', JSON.stringify(result));

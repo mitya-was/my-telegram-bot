@@ -24,17 +24,13 @@ function initializePerformersSheet() {
       Logger.log('✅ Вкладка "Виконавці" вже існує');
     }
     
-    // Заголовки колонок
+    // Заголовки колонок (НОВА СТРУКТУРА)
     const headers = [
       'Назва виконавця',
-      'Повна назва',
       'ЄДРПОУ',
       'Адреса',
-      'Тип організації',
-      'Телефон',
-      'Email',
       'Банківські реквізити',
-      'Керівник',
+      'Голова організації',
       'Дата додавання',
       'Активний'
     ];
@@ -48,18 +44,14 @@ function initializePerformersSheet() {
     headerRange.setBackground('#4285f4');
     headerRange.setFontColor('white');
     
-    // Встановлюємо ширину колонок
-    performersSheet.setColumnWidth(1, 200); // Назва виконавця
-    performersSheet.setColumnWidth(2, 300); // Повна назва
-    performersSheet.setColumnWidth(3, 120); // ЄДРПОУ
-    performersSheet.setColumnWidth(4, 400); // Адреса
-    performersSheet.setColumnWidth(5, 150); // Тип організації
-    performersSheet.setColumnWidth(6, 150); // Телефон
-    performersSheet.setColumnWidth(7, 200); // Email
-    performersSheet.setColumnWidth(8, 400); // Банківські реквізити
-    performersSheet.setColumnWidth(9, 200); // Керівник
-    performersSheet.setColumnWidth(10, 120); // Дата додавання
-    performersSheet.setColumnWidth(11, 100); // Активний
+    // Встановлюємо ширину колонок (НОВА СТРУКТУРА)
+    performersSheet.setColumnWidth(1, 250); // Назва виконавця
+    performersSheet.setColumnWidth(2, 120); // ЄДРПОУ
+    performersSheet.setColumnWidth(3, 400); // Адреса
+    performersSheet.setColumnWidth(4, 500); // Банківські реквізити
+    performersSheet.setColumnWidth(5, 200); // Голова організації
+    performersSheet.setColumnWidth(6, 120); // Дата додавання
+    performersSheet.setColumnWidth(7, 100); // Активний
     
     // Додаємо базових виконавців, якщо вкладка порожня
     if (performersSheet.getLastRow() === 1) {
@@ -83,53 +75,37 @@ function addDefaultPerformers(sheet) {
   
   const defaultPerformers = [
     [
-      'IT Company LLC',
-      'ТОВ "IT Company"',
-      '12345678',
-      'м. Київ, вул. Хрещатик, 1',
-      'ТОВ',
-      '+380441234567',
-      'info@itcompany.ua',
-      'Рахунок: UA123456789012345678901234567 в ПАТ "ПриватБанк"',
-      'Петренко Петро Петрович',
-      new Date(),
-      'Так'
-    ],
-    [
-      'Web Studio Pro',
-      'ТОВ "Web Studio Pro"',
-      '87654321',
-      'м. Львів, вул. Свободи, 15',
-      'ТОВ',
-      '+380321234567',
-      'contact@webstudiopro.ua',
-      'Рахунок: UA876543210987654321098765432 в ПАТ "Ощадбанк"',
+      'Іваненко Іван Іванович',
+      '1234567890',
+      'м. Київ, вул. Хрещатик, 1, кв. 10',
+      'Рахунок: UA123456789012345678901234567 в ПАТ "ПриватБанк", МФО: 305299',
       'Іваненко Іван Іванович',
       new Date(),
       'Так'
     ],
     [
-      'Digital Agency',
-      'ТОВ "Digital Agency"',
-      '11223344',
-      'м. Харків, вул. Сумська, 25',
-      'ТОВ',
-      '+380571234567',
-      'hello@digitalagency.ua',
-      'Рахунок: UA112233445566778899001122334 в ПАТ "Укргазбанк"',
+      'Петренко Петро Петрович',
+      '0987654321',
+      'м. Львів, вул. Свободи, 15, кв. 5',
+      'Рахунок: UA876543210987654321098765432 в ПАТ "Ощадбанк", МФО: 300012',
+      'Петренко Петро Петрович',
+      new Date(),
+      'Так'
+    ],
+    [
+      'Сидоренко Сидір Сидорович',
+      '1122334455',
+      'м. Харків, вул. Сумська, 25, кв. 8',
+      'Рахунок: UA112233445566778899001122334 в ПАТ "Укргазбанк", МФО: 320627',
       'Сидоренко Сидір Сидорович',
       new Date(),
       'Так'
     ],
     [
-      'Tech Solutions',
-      'ФОП "Tech Solutions"',
-      '55667788',
-      'м. Одеса, вул. Дерибасівська, 10',
-      'ФОП',
-      '+380481234567',
-      'info@techsolutions.ua',
-      'Рахунок: UA556677889900112233445566778 в ПАТ "Райффайзен Банк"',
+      'Коваленко Коваль Ковальович',
+      '5566778899',
+      'м. Одеса, вул. Дерибасівська, 10, кв. 3',
+      'Рахунок: UA556677889900112233445566778 в ПАТ "Райффайзен Банк", МФО: 380805',
       'Коваленко Коваль Ковальович',
       new Date(),
       'Так'
