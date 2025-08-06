@@ -14,13 +14,14 @@ function initializePerformersSheet() {
     let performersSheet;
     
     // Перевіряємо чи існує вкладка "Виконавці"
-    try {
-      performersSheet = spreadsheet.getSheetByName(CONFIG.SHEETS.PERFORMERS);
-      Logger.log('✅ Вкладка "Виконавці" вже існує');
-    } catch (error) {
+    performersSheet = spreadsheet.getSheetByName(CONFIG.SHEETS.PERFORMERS);
+    
+    if (performersSheet === null) {
       Logger.log('Створюю нову вкладку "Виконавці"...');
       performersSheet = spreadsheet.insertSheet(CONFIG.SHEETS.PERFORMERS);
       Logger.log('✅ Вкладка "Виконавці" створена');
+    } else {
+      Logger.log('✅ Вкладка "Виконавці" вже існує');
     }
     
     // Заголовки колонок
@@ -149,6 +150,12 @@ function addDefaultPerformers(sheet) {
 function getActivePerformers() {
   try {
     const sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.SHEETS.PERFORMERS);
+    
+    if (sheet === null) {
+      Logger.log('❌ Вкладка "Виконавці" не знайдена');
+      return [];
+    }
+    
     const data = sheet.getDataRange().getValues();
     
     const performers = [];
@@ -190,6 +197,12 @@ function getActivePerformers() {
 function getPerformerByName(performerName) {
   try {
     const sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.SHEETS.PERFORMERS);
+    
+    if (sheet === null) {
+      Logger.log('❌ Вкладка "Виконавці" не знайдена');
+      return null;
+    }
+    
     const data = sheet.getDataRange().getValues();
     
     // Шукаємо виконавця за назвою
@@ -228,6 +241,11 @@ function addNewPerformer(performerData) {
   try {
     const sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.SHEETS.PERFORMERS);
     
+    if (sheet === null) {
+      Logger.log('❌ Вкладка "Виконавці" не знайдена');
+      return false;
+    }
+    
     const newRow = [
       performerData.name,
       performerData.fullName,
@@ -259,6 +277,12 @@ function addNewPerformer(performerData) {
 function updatePerformer(performerName, updatedData) {
   try {
     const sheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID).getSheetByName(CONFIG.SHEETS.PERFORMERS);
+    
+    if (sheet === null) {
+      Logger.log('❌ Вкладка "Виконавці" не знайдена');
+      return false;
+    }
+    
     const data = sheet.getDataRange().getValues();
     
     // Шукаємо рядок з виконавцем

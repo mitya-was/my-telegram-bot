@@ -690,6 +690,11 @@ function initializeContractsSheet() {
     const spreadsheet = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
     const contractsSheet = spreadsheet.getSheetByName(CONFIG.SHEETS.CONTRACTS);
     
+    if (contractsSheet === null) {
+      Logger.log('❌ Вкладка договорів не знайдена');
+      throw new Error('Вкладка договорів не знайдена');
+    }
+    
     // Заголовки колонок
     const headers = [
       'Номер договору',
